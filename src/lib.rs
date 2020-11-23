@@ -49,6 +49,17 @@ impl Universe {
         count
     }
 
+    pub fn get_cells(&self) -> &FixedBitSet {
+        &self.cells
+    } 
+
+    pub fn set_cells(&mut self, cells: &[(u32, u32)]) {
+        for (row, col) in cells.iter().cloned() {
+            let idx = self.get_index(row, col);
+            self.cells.set(idx, true);
+        }
+    }
+
 }
 
 #[wasm_bindgen]
@@ -111,16 +122,50 @@ impl Universe {
     pub fn render(&self) -> String {
         self.to_string()
     }
+
+    pub fn set_width(&mut self, width:u32) {
+        self.width = width;
+        let size = (width * self.height) as usize;
+        let mut cells = FixedBitSet::with_capacity(size);
+        for i in 0..size {
+            cells.set(i, false);
+        }
+        self.cells = cells;
+    }
+
+    pub fn set_height(&mut self, height:u32) {
+        self.height = height;
+        let size = (height * self.width) as usize;
+        let mut cells = FixedBitSet::with_capacity(size);
+        for i in 0..size {
+            cells.set(i, false);
+        }
+
+        self.cells = cells;
+    }
 }
 
 impl fmt::Display for Universe {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        for line in self.cells.as_slice().chunks(self.width as usize) {
-            for &cell in line {
-                let symbol = if cell == 0 { '◻' } else { '◼' };
-                write!(f, "{}", symbol)?;
+        // for line in self.cells.as_slice().chunks(self.width as usize) {
+        //     for &cell in line {
+        //         let symbol = if cell == 0 { '◻' } else { '◼' };
+        //         write!(f, "{}", symbol)?;
+
+        //     }
+        //     write!(f, "\n")?;
+        // }
+
+        let size = self.cells.len() as usize ;
+
+        for idx in 0..size {
+            let cell = self.cells.contains(idx);
+            let symbol = if cell { '◼' } else { '◻' };
+            write!(f, "{}", symbol)?;
+
+            if (idx + 1) as u32 % self.width == 0 {
+                write!(f, "\n")?;
             }
-            write!(f, "\n")?;
         }
 
         Ok(())
