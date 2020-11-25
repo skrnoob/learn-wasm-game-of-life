@@ -45,10 +45,19 @@ pub fn test_render() {
     assert_eq!(input_universe.render(),expected_output);
 }
 
+#[wasm_bindgen_test] 
+pub fn test_toggle_cell() {
+    let mut input_universe = input_render();
+    input_universe.toggle_cell(0, 0);
+    let expected_output = String::from("◻◻◻\n◻◼◻\n◻◻◼\n");
+
+    assert_eq!(input_universe.render(),expected_output);
+
+}
 
 #[wasm_bindgen_test]
 pub fn test_tick() {
-    let mut input_universe = input_spaceship();
+    let input_universe = input_spaceship();
     let expected_universe = expected_spaceship();
 
     assert_eq!(&input_universe.render(), &input_universe.render());

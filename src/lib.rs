@@ -36,6 +36,16 @@ pub struct Universe {
     cells: FixedBitSet,
 }
 
+
+impl Cell {
+    fn toggle(&mut self) {
+        *self = match *self {
+            Cell::Dead => Cell::Alive,
+            Cell::Alive => Cell::Dead,
+        }
+    }
+}
+
 impl Universe {
     fn get_index(&self, row: u32, column: u32) -> usize {
         (row * self.width + column) as usize
@@ -114,7 +124,6 @@ impl Universe {
         
         for i in 0..size {
             cells.set(i, js_sys::Math::random() < 0.5);
-            // cells.set(i, i % 2 == 0 || i % 7 == 0);
         }
 
 
@@ -160,6 +169,14 @@ impl Universe {
         }
 
         self.cells = cells;
+    }
+
+    pub fn toggle_cell(&mut self, row:u32,column:u32) {
+        let idx = self.get_index(row, column);
+        match self.cells.contains(idx) {
+            true => self.cells.set(idx, false),
+            false => self.cells.set(idx, true),
+        }
     }
 }
 

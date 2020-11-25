@@ -69,13 +69,60 @@ const drawCells = () => {
     ctx.stroke()
 }
 
+let animationId = null;
+
+const playPauseButton = document.getElementById("play-pause");
+
+const play = () =>{
+    playPauseButton.textContent = "⏸";
+    renderLoop()
+}
+
+const pause = () => {
+    playPauseButton.textContent = "▶";
+    cancelAnimationFrame(animationId);
+    animationId = null;
+}
+
 const renderLoop = () => {
-    universe.tick();
     drawGrid();
     drawCells();
 
-    requestAnimationFrame(renderLoop);
+    universe.tick();
+
+    animationId = requestAnimationFrame(renderLoop);
     
 }
 
-requestAnimationFrame(renderLoop);
+const isPaused = ()=> {
+    return animationId == null;
+}
+
+playPauseButton.addEventListener("click",e => {
+    if(isPaused()) {
+        play();
+    } else {
+        pause();
+    }
+})
+
+cvs.addEventListener("click", event => {
+    const boundingRect = cvs.getBoundingClientRect();
+  
+    const scaleX = cvs.width / boundingRect.width;
+    const scaleY = cvs.height / boundingRect.height;
+  
+    const canvasLeft = (event.clientX - boundingRect.left) * scaleX;
+    const canvasTop = (event.clientY - boundingRect.top) * scaleY;
+  
+    const row = Math.min(Math.floor(canvasTop / (CELL_SIZE + 1)), height - 1);
+    const col = Math.min(Math.floor(canvasLeft / (CELL_SIZE + 1)), width - 1);
+  
+    universe.toggle_cell(row, col);
+  
+    drawGrid();
+    drawCells();
+});
+  
+
+play();
