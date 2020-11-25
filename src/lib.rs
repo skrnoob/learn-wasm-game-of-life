@@ -189,6 +189,28 @@ impl Universe {
             self.cells.set(i, false);
         }
     }
+
+    pub fn set_glider(&mut self, row:u32, column:u32) {
+        for delta_row in [self.height - 1, 0, 1].iter().cloned() {
+            for delta_col in [self.width - 1, 0, 1].iter().cloned() {
+                let neighbor_row = (row + delta_row) % self.height;
+                let neighbor_col = (column + delta_col) % self.width;
+                let idx = self.get_index(neighbor_row, neighbor_col);
+
+                match (delta_row,delta_col) {
+                    (0 ,1) | (1,_)   => {
+                        self.cells.set(idx, true);
+                    },
+                    (height,0) if height == self.height - 1 => {
+                        self.cells.set(idx, true);
+                    },
+                    (_,_) => {
+                        self.cells.set(idx, false);
+                    },
+                }
+            }
+        }
+    }
 }
 
 impl fmt::Display for Universe {

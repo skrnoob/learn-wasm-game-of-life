@@ -71,6 +71,7 @@ const drawCells = () => {
 
 let animationId = null;
 let tickTime = 1;
+let underCtrl = false;
 
 const playPauseButton = document.getElementById("play-pause");
 const tickInput = document.getElementById("volume");
@@ -126,9 +127,13 @@ cvs.addEventListener("click", event => {
   
     const row = Math.min(Math.floor(canvasTop / (CELL_SIZE + 1)), height - 1);
     const col = Math.min(Math.floor(canvasLeft / (CELL_SIZE + 1)), width - 1);
-  
-    universe.toggle_cell(row, col);
-  
+    
+    if(event.ctrlKey) {
+        universe.set_glider(row, col)
+    } else {
+        universe.toggle_cell(row, col);
+    }
+
     drawGrid();
     drawCells();
 });

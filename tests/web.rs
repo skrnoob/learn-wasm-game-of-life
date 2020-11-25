@@ -37,6 +37,15 @@ pub fn input_render() -> Universe {
     universe
 }
 
+#[cfg(test)]
+pub fn expected_glider() -> Universe {
+    let mut universe = Universe::new();
+    universe.set_width(3);
+    universe.set_height(3);
+    universe.set_cells(&[(0,1), (1,2), (2,0), (2,1), (2,2)]);
+    universe
+}
+
 #[wasm_bindgen_test]
 pub fn test_render() {
     let input_universe = input_render();
@@ -61,4 +70,14 @@ pub fn test_tick() {
     let expected_universe = expected_spaceship();
 
     assert_eq!(&input_universe.render(), &input_universe.render());
+}
+
+#[wasm_bindgen_test]
+pub fn test_set_glider() {
+    let mut input_glider = input_render();
+    input_glider.set_glider(1, 1);
+
+    let expected_glider = expected_glider();
+
+    assert_eq!(&input_glider.render(),&expected_glider.render())
 }
