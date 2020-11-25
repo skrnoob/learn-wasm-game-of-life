@@ -1,0 +1,7 @@
+{
+    "name":"learn-wasm-game-of-life",
+    "version": "0.1.0",
+    "scripts": {
+        "start": "cd ./www/ && npm run start"
+    }
+}
