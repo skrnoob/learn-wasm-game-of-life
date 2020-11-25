@@ -70,8 +70,14 @@ const drawCells = () => {
 }
 
 let animationId = null;
+let tickTime = 1;
 
 const playPauseButton = document.getElementById("play-pause");
+const tickInput = document.getElementById("volume");
+const labelInput = document.getElementById("label_volume");
+
+tickInput.setAttribute("value",tickTime.toString());
+labelInput.textContent = tickTime.toString();
 
 const play = () =>{
     playPauseButton.textContent = "⏸";
@@ -87,8 +93,9 @@ const pause = () => {
 const renderLoop = () => {
     drawGrid();
     drawCells();
-
-    universe.tick();
+    for(let i = 1;i<=tickTime;i++){
+        universe.tick()
+    }
 
     animationId = requestAnimationFrame(renderLoop);
     
@@ -124,5 +131,23 @@ cvs.addEventListener("click", event => {
     drawCells();
 });
   
+tickInput.addEventListener("change",e => {
+    let value;
+
+    try {
+        value = e.target.value;
+    } catch (error) {
+        return
+    }
+
+    if(isNaN(value) || value == null || value == undefined) {
+        return
+    };
+
+    tickTime = parseInt(value);
+
+    labelInput.textContent = value.toString();
+
+})
 
 play();
