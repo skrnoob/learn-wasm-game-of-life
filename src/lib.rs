@@ -178,6 +178,17 @@ impl Universe {
             false => self.cells.set(idx, true),
         }
     }
+
+    pub fn reset(&mut self) {
+        *self = Universe::new();
+    }
+
+    pub fn clear(&mut self) {
+        let size = self.cells.len();
+        for i in 0..size {
+            self.cells.set(i, false);
+        }
+    }
 }
 
 impl fmt::Display for Universe {

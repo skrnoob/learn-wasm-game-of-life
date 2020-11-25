@@ -75,9 +75,11 @@ let tickTime = 1;
 const playPauseButton = document.getElementById("play-pause");
 const tickInput = document.getElementById("volume");
 const labelInput = document.getElementById("label_volume");
+const resetButton = document.getElementById("reset");
+const clearButton = document.getElementById("clear");
 
 tickInput.setAttribute("value",tickTime.toString());
-labelInput.textContent = tickTime.toString();
+labelInput.textContent = `${tickTime.toString()} ticks per frame`;
 
 const play = () =>{
     playPauseButton.textContent = "⏸";
@@ -146,8 +148,16 @@ tickInput.addEventListener("change",e => {
 
     tickTime = parseInt(value);
 
-    labelInput.textContent = value.toString();
+    labelInput.textContent = `${value.toString()} ticks per frame`;
 
+})
+
+resetButton.addEventListener("click", e => {
+    universe.reset()
+})
+
+clearButton.addEventListener("click", e => {
+    universe.clear()
 })
 
 play();
