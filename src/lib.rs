@@ -1,18 +1,18 @@
 mod utils;
-
-use wasm_bindgen::prelude::*;
+mod timer_console;
+// use wasm_bindgen::prelude::*;
 use std::fmt;
 extern crate fixedbitset;
 use fixedbitset::FixedBitSet;
-extern crate js_sys;
+// use timer_console::Timer;
+// extern crate js_sys;
+// extern crate web_sys;
 
-extern crate web_sys;
-
-macro_rules! log {
-    ( $( $t:tt )* ) => {
-        web_sys::console::log_1(&format!($($t)*).into());
-    }
-}
+// macro_rules! log {
+//     ( $( $t:tt )* ) => {
+//         web_sys::console::log_1(&format!($($t)*).into());
+//     }
+// }
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
@@ -20,7 +20,7 @@ macro_rules! log {
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
-#[wasm_bindgen]
+// #[wasm_bindgen]
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 
@@ -29,7 +29,7 @@ pub enum Cell {
     Alive = 1,
 }
 
-#[wasm_bindgen] 
+// #[wasm_bindgen] 
 pub struct Universe {
     width: u32,
     height: u32,
@@ -80,50 +80,56 @@ impl Universe {
 
 }
 
-#[wasm_bindgen]
+// #[wasm_bindgen]
 impl Universe {
     pub fn tick(&mut self) {
-        let mut next = self.cells.clone();
+        // let _timer = Timer::new("Universe::tick");
+        let mut next = {
+            // let _timer = Timer::new("allocate next cells");
+            self.cells.clone()
+        };
 
-        for row in 0..self.height {
-            for col in 0..self.width {
-                let idx = self.get_index(row, col);
-                let cell = self.cells[idx];
-                let live_neighbors = self.live_neighbor_count(row, col);
-
-                // log!(
-                //     "cell[{}, {}] is initially {:?} and has {} live neighbors",
-                //     row,
-                //     col,
-                //     cell,
-                //     live_neighbors
-                // );
-
-                next.set(idx, match (cell, live_neighbors) {
-                    (true, x) if x<2 => false,
-                    (true, 2) | (true, 3) => true,
-                    (true, x) if x > 3 => false,
-                    (false, 3) => true,
-                    (otherwise, _) => otherwise
-                });
+        {   
+            // let _timer = Timer::new("new generation");
+            for row in 0..self.height {
+                for col in 0..self.width {
+                    let idx = self.get_index(row, col);
+                    let cell = self.cells[idx];
+                    let live_neighbors = self.live_neighbor_count(row, col);
+    
+                    // log!(
+                    //     "cell[{}, {}] is initially {:?} and has {} live neighbors",
+                    //     row,
+                    //     col,
+                    //     cell,
+                    //     live_neighbors
+                    // );
+    
+                    next.set(idx, match (cell, live_neighbors) {
+                        (true, x) if x<2 => false,
+                        (true, 2) | (true, 3) => true,
+                        (true, x) if x > 3 => false,
+                        (false, 3) => true,
+                        (otherwise, _) => otherwise
+                    });
+                }
             }
         }
-
+        // let _timer = Timer::new("free old cells");
         self.cells = next;
 
     }
 
     pub fn new() -> Universe {
         utils::set_panic_hook();
-        //  panic!("panic info");
-        let width = 64;
-        let height = 64;
+        let width = 128;
+        let height = 128;
 
         let size = (width*height) as usize;
         let mut cells = FixedBitSet::with_capacity(size);
-        
         for i in 0..size {
-            cells.set(i, js_sys::Math::random() < 0.5);
+            // cells.set(i, js_sys::Math::random() < 0.5);
+            cells.set(i, i%2 == 0|| i%7 == 0);
         }
 
 

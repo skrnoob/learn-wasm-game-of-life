@@ -1,5 +1,6 @@
 import { Universe } from "wasm-game-of-life";
 import { memory } from "wasm-game-of-life/wasm_game_of_life_bg"
+import Fps from "./fps"
 
 const CELL_SIZE = 5;
 const GRID_COLOR = "#CCCCCC";
@@ -49,14 +50,43 @@ const drawCells = () => {
     const cells = new Uint8Array(memory.buffer, cellsPtr, width * height / 8);
     ctx.beginPath();
 
+    ctx.fillStyle = ALIVE_COLOR;
+
     for(let row = 0; row<height; row++) {
         for (let col = 0;col < width; col++) {
             const idx = getIndex(row, col);
 
-            ctx.fillStyle = bitIsSet(idx, cells)
-                ? ALIVE_COLOR
-                : DEAD_COLOR;
+            // ctx.fillStyle = bitIsSet(idx, cells)
+            //     ? ALIVE_COLOR
+            //     : DEAD_COLOR;
             
+            if(!bitIsSet(idx, cells)) {
+                continue
+            }
+
+            ctx.fillRect(
+                col * ( CELL_SIZE + 1 ) + 1,
+                row * ( CELL_SIZE + 1 ) + 1,
+                CELL_SIZE,
+                CELL_SIZE
+            )
+        }
+    }
+
+    ctx.fillStyle = DEAD_COLOR;
+
+    for(let row = 0; row<height; row++) {
+        for (let col = 0;col < width; col++) {
+            const idx = getIndex(row, col);
+
+            // ctx.fillStyle = bitIsSet(idx, cells)
+            //     ? ALIVE_COLOR
+            //     : DEAD_COLOR;
+            
+            if(bitIsSet(idx, cells)) {
+                continue
+            }
+
             ctx.fillRect(
                 col * ( CELL_SIZE + 1 ) + 1,
                 row * ( CELL_SIZE + 1 ) + 1,
@@ -93,15 +123,17 @@ const pause = () => {
     animationId = null;
 }
 
+const fps = new Fps;
 const renderLoop = () => {
+    fps.render();
+    
     drawGrid();
     drawCells();
     for(let i = 1;i<=tickTime;i++){
         universe.tick()
     }
-
-    animationId = requestAnimationFrame(renderLoop);
     
+    animationId = requestAnimationFrame(renderLoop);
 }
 
 const isPaused = ()=> {
