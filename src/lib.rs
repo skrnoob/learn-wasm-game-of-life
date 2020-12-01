@@ -1,12 +1,12 @@
 mod utils;
 mod timer_console;
-// use wasm_bindgen::prelude::*;
+use wasm_bindgen::prelude::*;
 use std::fmt;
 extern crate fixedbitset;
 use fixedbitset::FixedBitSet;
-// use timer_console::Timer;
-// extern crate js_sys;
-// extern crate web_sys;
+use timer_console::Timer;
+extern crate js_sys;
+extern crate web_sys;
 
 // macro_rules! log {
 //     ( $( $t:tt )* ) => {
@@ -20,7 +20,7 @@ use fixedbitset::FixedBitSet;
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
-// #[wasm_bindgen]
+#[wasm_bindgen]
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 
@@ -29,7 +29,7 @@ pub enum Cell {
     Alive = 1,
 }
 
-// #[wasm_bindgen] 
+#[wasm_bindgen] 
 pub struct Universe {
     width: u32,
     height: u32,
@@ -53,19 +53,69 @@ impl Universe {
 
     fn live_neighbor_count(&self, row: u32, column: u32) -> u8 {
         let mut count = 0;
-        for delta_row in [self.height - 1, 0, 1].iter().cloned() {
-            for delta_col in [self.height - 1, 0, 1].iter().cloned() {
-                if delta_row == 0 && delta_col == 0 {
-                    continue;
-                }
-                let neighbor_row = (row + delta_row) % self.height;
-                let neighbor_col = (column + delta_col) % self.width;
-                let idx = self.get_index(neighbor_row, neighbor_col);
-                count += self.cells[idx] as u8
-            }
-        }
+        // for delta_row in [self.height - 1, 0, 1].iter().cloned() {
+        //     for delta_col in [self.height - 1, 0, 1].iter().cloned() {
+        //         if delta_row == 0 && delta_col == 0 {
+        //             continue;
+        //         }
+        //         let neighbor_row = (row + delta_row) % self.height;
+        //         let neighbor_col = (column + delta_col) % self.width;
+        //         let idx = self.get_index(neighbor_row, neighbor_col);
+        //         count += self.cells[idx] as u8
+        //     }
+        // }
+        let north = if row == 0 {
+            self.height - 1
+        } else {
+            row - 1
+        };
+    
+        let south = if row == self.height - 1 {
+            0
+        } else {
+            row + 1
+        };
+    
+        let west = if column == 0 {
+            self.width - 1
+        } else {
+            column - 1
+        };
+    
+        let east = if column == self.width - 1 {
+            0
+        } else {
+            column + 1
+        };
+    
+        let nw = self.get_index(north, west);
+        count += self.cells[nw] as u8;
+    
+        let n = self.get_index(north, column);
+        count += self.cells[n] as u8;
+    
+        let ne = self.get_index(north, east);
+        count += self.cells[ne] as u8;
+    
+        let w = self.get_index(row, west);
+        count += self.cells[w] as u8;
+    
+        let e = self.get_index(row, east);
+        count += self.cells[e] as u8;
+    
+        let sw = self.get_index(south, west);
+        count += self.cells[sw] as u8;
+    
+        let s = self.get_index(south, column);
+        count += self.cells[s] as u8;
+    
+        let se = self.get_index(south, east);
+        count += self.cells[se] as u8;
+
         count
     }
+
+    
 
     pub fn get_cells(&self) -> &FixedBitSet {
         &self.cells
@@ -80,17 +130,17 @@ impl Universe {
 
 }
 
-// #[wasm_bindgen]
+#[wasm_bindgen]
 impl Universe {
     pub fn tick(&mut self) {
-        // let _timer = Timer::new("Universe::tick");
+        let _timer = Timer::new("Universe::tick");
         let mut next = {
-            // let _timer = Timer::new("allocate next cells");
+            let _timer = Timer::new("allocate next cells");
             self.cells.clone()
         };
 
         {   
-            // let _timer = Timer::new("new generation");
+            let _timer = Timer::new("new generation");
             for row in 0..self.height {
                 for col in 0..self.width {
                     let idx = self.get_index(row, col);
@@ -115,7 +165,7 @@ impl Universe {
                 }
             }
         }
-        // let _timer = Timer::new("free old cells");
+        let _timer = Timer::new("free old cells");
         self.cells = next;
 
     }
@@ -128,8 +178,8 @@ impl Universe {
         let size = (width*height) as usize;
         let mut cells = FixedBitSet::with_capacity(size);
         for i in 0..size {
-            // cells.set(i, js_sys::Math::random() < 0.5);
-            cells.set(i, i%2 == 0|| i%7 == 0);
+            cells.set(i, js_sys::Math::random() < 0.5);
+            // cells.set(i, i%2 == 0|| i%7 == 0);
         }
 
 

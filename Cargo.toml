@@ -5,8 +5,8 @@ authors = ["skrnoob <a775463931@163.com>"]
 edition = "2018"
 
 [lib]
-crate-type = ["rlib"]
-# crate-type = ["cdylib", "rlib"]
+# crate-type = ["rlib"]
+crate-type = ["cdylib", "rlib"]
 
 [features]
 default = ["console_error_panic_hook"]
