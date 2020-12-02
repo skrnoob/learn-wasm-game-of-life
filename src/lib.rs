@@ -7,6 +7,7 @@ use fixedbitset::FixedBitSet;
 use timer_console::Timer;
 extern crate js_sys;
 extern crate web_sys;
+use std::mem;
 
 // macro_rules! log {
 //     ( $( $t:tt )* ) => {
@@ -34,6 +35,7 @@ pub struct Universe {
     width: u32,
     height: u32,
     cells: FixedBitSet,
+    cells_bak: FixedBitSet,
 }
 
 
@@ -134,10 +136,10 @@ impl Universe {
 impl Universe {
     pub fn tick(&mut self) {
         let _timer = Timer::new("Universe::tick");
-        let mut next = {
-            let _timer = Timer::new("allocate next cells");
-            self.cells.clone()
-        };
+        // let mut next = {
+        //     let _timer = Timer::new("allocate next cells");
+        //     self.cells.clone()
+        // };
 
         {   
             let _timer = Timer::new("new generation");
@@ -147,15 +149,7 @@ impl Universe {
                     let cell = self.cells[idx];
                     let live_neighbors = self.live_neighbor_count(row, col);
     
-                    // log!(
-                    //     "cell[{}, {}] is initially {:?} and has {} live neighbors",
-                    //     row,
-                    //     col,
-                    //     cell,
-                    //     live_neighbors
-                    // );
-    
-                    next.set(idx, match (cell, live_neighbors) {
+                    self.cells_bak.set(idx, match (cell, live_neighbors) {
                         (true, x) if x<2 => false,
                         (true, 2) | (true, 3) => true,
                         (true, x) if x > 3 => false,
@@ -165,8 +159,12 @@ impl Universe {
                 }
             }
         }
-        let _timer = Timer::new("free old cells");
-        self.cells = next;
+        let _timer = Timer::new("swap cells");
+        
+        let cells = &mut self.cells;
+        let cells_bak = &mut self.cells_bak;
+
+        mem::swap(cells, cells_bak);
 
     }
 
@@ -177,6 +175,7 @@ impl Universe {
 
         let size = (width*height) as usize;
         let mut cells = FixedBitSet::with_capacity(size);
+        let cells_bak = FixedBitSet::with_capacity(size);
         for i in 0..size {
             cells.set(i, js_sys::Math::random() < 0.5);
             // cells.set(i, i%2 == 0|| i%7 == 0);
@@ -187,6 +186,7 @@ impl Universe {
             width,
             height,
             cells,
+            cells_bak,
         }
     }
 
