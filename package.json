@@ -3,6 +3,6 @@
     "version": "0.1.0",
     "scripts": {
         "start": "cd ./www/ && npm run start",
-        "install": "cd ./www/ && npm i"
+        "w-install": "cd ./www/ && npm i"
     }
 }

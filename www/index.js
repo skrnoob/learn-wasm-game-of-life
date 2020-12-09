@@ -1,6 +1,7 @@
 import { Universe } from "wasm-game-of-life";
 import { memory } from "wasm-game-of-life/wasm_game_of_life_bg"
 import Fps from "./fps"
+import { draw } from './webgl-draw'
 
 const CELL_SIZE = 5;
 const GRID_COLOR = "#CCCCCC";
@@ -15,25 +16,25 @@ const cvs = document.getElementById("game-of-life-canvas");
 cvs.height = ( CELL_SIZE + 1 ) * height + 1;
 cvs.width = ( CELL_SIZE + 1 ) * width + 1;
 
-const ctx = cvs.getContext('2d');
+// const ctx = cvs.getContext('2d');
 
-const drawGrid = () => {
-    ctx.beginPath();
-    ctx.strokeStyle = GRID_COLOR;
+// const drawGrid = () => {
+//     ctx.beginPath();
+//     ctx.strokeStyle = GRID_COLOR;
 
-    for (let i = 0; i<= width; i++) {
-        ctx.moveTo(i*(CELL_SIZE + 1) + 1, 0);
-        ctx.lineTo(i*(CELL_SIZE + 1) + 1, (CELL_SIZE + 1) * height + 1);
-    }
+//     for (let i = 0; i<= width; i++) {
+//         ctx.moveTo(i*(CELL_SIZE + 1) + 1, 0);
+//         ctx.lineTo(i*(CELL_SIZE + 1) + 1, (CELL_SIZE + 1) * height + 1);
+//     }
 
-    for( let j = 0; j<= height; j++ ) {
-        ctx.moveTo(0, j*(CELL_SIZE + 1) + 1);
-        ctx.lineTo((CELL_SIZE + 1) * width + 1, j*(CELL_SIZE + 1) + 1);
-    }
+//     for( let j = 0; j<= height; j++ ) {
+//         ctx.moveTo(0, j*(CELL_SIZE + 1) + 1);
+//         ctx.lineTo((CELL_SIZE + 1) * width + 1, j*(CELL_SIZE + 1) + 1);
+//     }
 
-    ctx.stroke();
+//     ctx.stroke();
 
-}
+// }
 
 const getIndex = (row, col) => {
     return row * width + col;
@@ -45,59 +46,73 @@ const bitIsSet = (n, arr) => {
     return (arr[byte] & mask) === mask;
 };
 
-const drawCells = () => {
+const getCellsState = () =>{
     const cellsPtr = universe.cells();
     const cells = new Uint8Array(memory.buffer, cellsPtr, width * height / 8);
-    ctx.beginPath();
-
-    ctx.fillStyle = ALIVE_COLOR;
-
+    let cellsState = [];
     for(let row = 0; row<height; row++) {
         for (let col = 0;col < width; col++) {
             const idx = getIndex(row, col);
-
-            // ctx.fillStyle = bitIsSet(idx, cells)
-            //     ? ALIVE_COLOR
-            //     : DEAD_COLOR;
-            
-            if(!bitIsSet(idx, cells)) {
-                continue
-            }
-
-            ctx.fillRect(
-                col * ( CELL_SIZE + 1 ) + 1,
-                row * ( CELL_SIZE + 1 ) + 1,
-                CELL_SIZE,
-                CELL_SIZE
-            )
+            let value = bitIsSet(idx, cells)?1:0;
+            cellsState.push(value)
         }
     }
-
-    ctx.fillStyle = DEAD_COLOR;
-
-    for(let row = 0; row<height; row++) {
-        for (let col = 0;col < width; col++) {
-            const idx = getIndex(row, col);
-
-            // ctx.fillStyle = bitIsSet(idx, cells)
-            //     ? ALIVE_COLOR
-            //     : DEAD_COLOR;
-            
-            if(bitIsSet(idx, cells)) {
-                continue
-            }
-
-            ctx.fillRect(
-                col * ( CELL_SIZE + 1 ) + 1,
-                row * ( CELL_SIZE + 1 ) + 1,
-                CELL_SIZE,
-                CELL_SIZE
-            )
-        }
-    }
-
-    ctx.stroke()
+    return cellsState
 }
+
+// const drawCells = () => {
+//     const cellsPtr = universe.cells();
+//     const cells = new Uint8Array(memory.buffer, cellsPtr, width * height / 8);
+//     ctx.beginPath();
+
+//     ctx.fillStyle = ALIVE_COLOR;
+
+//     for(let row = 0; row<height; row++) {
+//         for (let col = 0;col < width; col++) {
+//             const idx = getIndex(row, col);
+
+//             // ctx.fillStyle = bitIsSet(idx, cells)
+//             //     ? ALIVE_COLOR
+//             //     : DEAD_COLOR;
+            
+//             if(!bitIsSet(idx, cells)) {
+//                 continue
+//             }
+
+//             ctx.fillRect(
+//                 col * ( CELL_SIZE + 1 ) + 1,
+//                 row * ( CELL_SIZE + 1 ) + 1,
+//                 CELL_SIZE,
+//                 CELL_SIZE
+//             )
+//         }
+//     }
+
+//     ctx.fillStyle = DEAD_COLOR;
+
+//     for(let row = 0; row<height; row++) {
+//         for (let col = 0;col < width; col++) {
+//             const idx = getIndex(row, col);
+
+//             // ctx.fillStyle = bitIsSet(idx, cells)
+//             //     ? ALIVE_COLOR
+//             //     : DEAD_COLOR;
+            
+//             if(bitIsSet(idx, cells)) {
+//                 continue
+//             }
+
+//             ctx.fillRect(
+//                 col * ( CELL_SIZE + 1 ) + 1,
+//                 row * ( CELL_SIZE + 1 ) + 1,
+//                 CELL_SIZE,
+//                 CELL_SIZE
+//             )
+//         }
+//     }
+
+//     ctx.stroke()
+// }
 
 let animationId = null;
 let tickTime = 1;
@@ -127,8 +142,11 @@ const fps = new Fps;
 const renderLoop = () => {
     fps.render();
     
-    drawGrid();
-    drawCells();
+    // drawGrid();
+    // drawCells();
+
+    draw(width,height,CELL_SIZE,getCellsState());
+
     for(let i = 1;i<=tickTime;i++){
         universe.tick()
     }
@@ -166,8 +184,10 @@ cvs.addEventListener("click", event => {
         universe.toggle_cell(row, col);
     }
 
-    drawGrid();
-    drawCells();
+    // drawGrid();
+    // drawCells();
+
+    draw(width,height,CELL_SIZE,getCellsState())
 });
   
 tickInput.addEventListener("change",e => {
@@ -198,3 +218,4 @@ clearButton.addEventListener("click", e => {
 })
 
 play();
+
