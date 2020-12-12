@@ -3,14 +3,16 @@ import { memory } from "wasm-game-of-life/wasm_game_of_life_bg"
 import Fps from "./fps"
 import { draw } from './webgl-draw'
 
-const CELL_SIZE = 5;
+// const CELL_SIZE = 5;
+
 const GRID_COLOR = "#CCCCCC";
 const DEAD_COLOR = "#FFFFFF";
 const ALIVE_COLOR = "#000000";
 
-const universe = Universe.new();
+const universe = Universe.new(128,128,5);
 const width = universe.width();
 const height = universe.height();
+const CELL_SIZE = universe.cell_size();
 const cvs = document.getElementById("game-of-life-canvas");
 
 cvs.height = ( CELL_SIZE + 1 ) * height + 1;
@@ -58,6 +60,15 @@ const getCellsState = () =>{
         }
     }
     return cellsState
+}
+
+const runDraw = () => {
+    const cellPositionsPtr = universe.cells_position();
+    const len = universe.cells_position_len();
+    const cellPostions = new Uint32Array(memory.buffer, cellPositionsPtr, len);
+    const cellPositionsArray = Array.from(cellPostions);
+
+    draw(width,height,CELL_SIZE,cellPositionsArray);
 }
 
 // const drawCells = () => {
@@ -145,8 +156,8 @@ const renderLoop = () => {
     // drawGrid();
     // drawCells();
 
-    draw(width,height,CELL_SIZE,getCellsState());
-
+    // draw(width,height,CELL_SIZE,getCellsState());
+    runDraw();
     for(let i = 1;i<=tickTime;i++){
         universe.tick()
     }
@@ -179,7 +190,7 @@ cvs.addEventListener("click", event => {
     const col = Math.min(Math.floor(canvasLeft / (CELL_SIZE + 1)), width - 1);
     
     if(event.ctrlKey) {
-        universe.set_glider(row, col)
+        universe.set_glider(row, col);
     } else {
         universe.toggle_cell(row, col);
     }
@@ -187,7 +198,9 @@ cvs.addEventListener("click", event => {
     // drawGrid();
     // drawCells();
 
-    draw(width,height,CELL_SIZE,getCellsState())
+    // draw(width,height,CELL_SIZE,getCellsState())
+    universe.cells_to_cells_positon();
+    runDraw();
 });
   
 tickInput.addEventListener("change",e => {
@@ -210,7 +223,12 @@ tickInput.addEventListener("change",e => {
 })
 
 resetButton.addEventListener("click", e => {
-    universe.reset()
+    if(isPaused()) {
+        universe.reset(128,128,5)
+        play();
+    } else {
+        universe.reset(128,128,5)
+    }
 })
 
 clearButton.addEventListener("click", e => {

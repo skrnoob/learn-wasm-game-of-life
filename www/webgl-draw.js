@@ -3,6 +3,7 @@ import * as WebGLUtils from 'webgl-utils.js';
 const vsSource = `
   attribute vec2 a_position;
   attribute vec2 a_rec_position;
+  attribute float a_point_size;
   uniform vec2 u_resolution;
 
   void main(){
@@ -11,6 +12,7 @@ const vsSource = `
     vec2 clipSpace = zeroToTwo - 1.0;
 
     gl_Position = vec4(clipSpace * vec2(1,-1) , 0, 1);
+    gl_PointSize = a_point_size;
   }`
 
 const fsSource = `
@@ -58,8 +60,8 @@ function createProgram(gl, vertexShader, fragmentShader) {
 }
 
 function draw(row = 64, col = 64, cellSize = 10, cellsState = [], color = [0, 0, 0, 1]) {
-    
-    if(!gl_gl){
+
+    if (!gl_gl) {
         const canvas = document.getElementById("game-of-life-canvas");
         gl_gl = canvas.getContext("webgl");
     }
@@ -87,7 +89,7 @@ function draw(row = 64, col = 64, cellSize = 10, cellsState = [], color = [0, 0,
     }
 
     var program;
-    if(!gl_program) {
+    if (!gl_program) {
         program = createProgram(gl, vertexShader, fragmentShader);
         gl_program = program;
     } else {
@@ -99,12 +101,12 @@ function draw(row = 64, col = 64, cellSize = 10, cellsState = [], color = [0, 0,
     var resolutionUniformLocation = gl.getUniformLocation(program, "u_resolution");
     var colorUniformLocation = gl.getUniformLocation(program, "u_color");
 
-    if(!hasResized) {
+    if (!hasResized) {
         WebGLUtils.resizeCanvasToDisplaySize(gl.canvas);
         hasResized = true;
     }
 
-    if(!hasSetViewPort){
+    if (!hasSetViewPort) {
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
         hasSetViewPort = true
     }
@@ -139,7 +141,7 @@ function draw(row = 64, col = 64, cellSize = 10, cellsState = [], color = [0, 0,
     }
 
     for (let i = 0; i <= col; i++) {
-        positions.push(0, i * (cellSize + 1) + 1, col * (cellSize + 1) + 1, i *  (cellSize + 1) + 1);
+        positions.push(0, i * (cellSize + 1) + 1, col * (cellSize + 1) + 1, i * (cellSize + 1) + 1);
     }
 
     let lineLength = positions.length;
@@ -149,40 +151,72 @@ function draw(row = 64, col = 64, cellSize = 10, cellsState = [], color = [0, 0,
     var primitiveType = gl.LINES;
     var offset = 0;
     var count = lineLength / 2;
-    gl.drawArrays(primitiveType, offset, count)
+    gl.drawArrays(primitiveType, offset, count);
 
-    // draw cells
-    var rectPositionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, rectPositionBuffer);
+    // draw points
 
-    let rectPositions = [];
+    var pointPositionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, pointPositionBuffer);
 
-    rectPositions = cellsState.reduce((total, state, idx) => {
-        if (state) {
-            let west = (idx % row) * (cellSize + 1);
-            let north = Math.floor(idx / row) * (cellSize + 1);
-            let east = (idx % row + 1) * (cellSize + 1);
-            let south = Math.floor(idx / row + 1) * (cellSize + 1);
-            // console.log(west, north, east, south);
-            let wn = [west, north];
-            let en = [east, north];
-            let es = [east, south];
-            let ws = [west, south];
-            return total = [...total, ...wn, ...en, ...ws, ...en, ...ws, ...es]
-        }
-        return total
-    }, [])
+    // let pointPositions = cellsState.reduce((total, state, idx) => {
+    //     if (state) {
+    //         let x = (idx % row) * (cellSize + 1) + cellSize / 2 + 1;
+    //         let y = Math.floor(idx / row) * (cellSize + 1) + cellSize / 2 + 1;
+    //         return total = [...total, x, y];
+    //     }
+    //     return total
+    // }, [])
 
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(rectPositions), gl.STATIC_DRAW);
+    // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(pointPositions), gl.STATIC_DRAW);
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, rectPositionBuffer);
-
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(cellsState), gl.STATIC_DRAW);
     gl.vertexAttribPointer(positions, size, type, normalized, stride, offset);
 
-    primitiveType = gl.TRIANGLES;
+    var pointSizesBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, pointSizesBuffer);
+    var positionSizeAttributeLocation = gl.getAttribLocation(program, "a_point_size");
+    gl.enableVertexAttribArray(positionSizeAttributeLocation);
+    let pointSizes = new Array(cellsState.length / 2).fill(cellSize);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(pointSizes), gl.STATIC_DRAW);
+    gl.vertexAttribPointer(positionSizeAttributeLocation, 1, type, normalized, stride, offset);
+
+
+    primitiveType = gl.POINTS;
     offset = 0;
-    count = rectPositions.length / 2;
-    gl.drawArrays(primitiveType, offset, count)
+    count = cellsState.length / 2;
+    gl.drawArrays(primitiveType, offset, count);
+
+    // draw cells
+    // var rectPositionBuffer = gl.createBuffer();
+    // gl.bindBuffer(gl.ARRAY_BUFFER, rectPositionBuffer);
+
+    // let rectPositions = [];
+
+    // rectPositions = cellsState.reduce((total, state, idx) => {
+    //     if (state) {
+    //         let west = (idx % row) * (cellSize + 1);
+    //         let north = Math.floor(idx / row) * (cellSize + 1);
+    //         let east = (idx % row + 1) * (cellSize + 1);
+    //         let south = Math.floor(idx / row + 1) * (cellSize + 1);
+    //         let wn = [west, north];
+    //         let en = [east, north];
+    //         let es = [east, south];
+    //         let ws = [west, south];
+    //         return total = [...total, ...wn, ...en, ...ws, ...en, ...ws, ...es]
+    //     }
+    //     return total
+    // }, [])
+
+    // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(rectPositions), gl.STATIC_DRAW);
+
+    // gl.bindBuffer(gl.ARRAY_BUFFER, rectPositionBuffer);
+
+    // gl.vertexAttribPointer(positions, size, type, normalized, stride, offset);
+
+    // primitiveType = gl.TRIANGLES;
+    // offset = 0;
+    // count = rectPositions.length / 2;
+    // gl.drawArrays(primitiveType, offset, count)
 }
 
 export { draw }
